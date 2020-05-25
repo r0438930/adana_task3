@@ -1,0 +1,22 @@
+CODE GRAPH 1 (POSTS)
+
+MATCH (p:Post)-[:Submitted]->(:Subreddit {display_name: 'covid19'})
+WITH avg(toFloat(p.score)) as score_avg
+MATCH (u:User)-[:Submitted]->(p:Post)-[:Submitted]->(:Subreddit {display_name: 'covid19'})
+WHERE p.score > score_avg
+WITH DISTINCT u as top_users
+MATCH (top_users)-[s1:Submitted]->(p:Post)-[s2:Submitted]->(sub:Subreddit)
+WHERE not sub.display_name in ['covid19','china_flu','coronavirus']
+RETURN top_users, s1, p, s2, sub
+
+CODE GRAPH 2 (COMMENTS)
+
+MATCH (p:Post)-[:Submitted]->(:Subreddit {display_name: 'covid19'})
+WITH avg(toFloat(p.score)) as score_avg
+MATCH (u:User)-[:Submitted]->(p:Post)-[:Submitted]->(:Subreddit {display_name: 'covid19'})
+WHERE p.score > score_avg
+WITH DISTINCT u as top_users
+MATCH (top_users)-[c1:Commented]->(com:Comment)-[c2:Commented]->(p:Post)-[s1:Submitted]->(sub:Subreddit)
+WHERE NOT sub.display_name in ['covid19','china_flu','coronavirus'] AND
+NOT EXISTS((top_users)-[:Submitted]->(p))
+RETURN top_users, c1, com, c2, p, s1, sub
